@@ -2,7 +2,8 @@
 
 An [MCP](https://modelcontextprotocol.io) server that teaches and helps apply
 **software-design guidance** — the SOLID principles, the OOP pillars, DRY /
-KISS / YAGNI, and the 23 Gang-of-Four design patterns — plus pattern
+KISS / YAGNI / meaningful naming, and the 23 Gang-of-Four design patterns —
+plus pattern
 scaffolding and heuristic code-smell detection.
 
 It's the companion to
@@ -33,7 +34,8 @@ pretending to understand your snippet.
 ## Tools
 
 - **`list_catalog`** `{ kind? }` — list concepts, optionally filtered
-  (`principle` | `pattern` | `creational` | `structural` | `behavioral`).
+  (`principle` | `solid` | `oop` | `pattern` | `creational` | `structural` |
+  `behavioral`). `solid` / `oop` narrow to the SOLID five / the four OOP pillars.
 - **`explain_concept`** `{ name }` — full guidance for one principle or
   pattern (intent, when-to-use, trade-offs, participants). Accepts a slug,
   name, or alias (`"SRP"`, `"open-closed"`, `"pubsub"`).
@@ -47,7 +49,8 @@ pretending to understand your snippet.
 
 ## Resources
 
-- **`design://principles`** — SOLID, OOP pillars, DRY, KISS, YAGNI, and more.
+- **`design://principles`** — SOLID, OOP pillars, DRY, KISS, YAGNI, meaningful
+  naming, and more.
 - **`design://patterns`** — the 23 GoF patterns, grouped creational /
   structural / behavioral.
 - **`design://smells`** — what `check_smells` detects, its thresholds, and its
