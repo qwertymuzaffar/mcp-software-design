@@ -69,6 +69,27 @@ const TYPE_KEYWORDS = new Set([
 ]);
 
 /**
+ * From `start`, scan `line` for the next unescaped `delimiter`, treating `\x`
+ * as an escape pair (so `\"` or `` \` `` don't close the literal). Returns the
+ * delimiter's index with `closed: true` when found, otherwise the line length
+ * with `closed: false`. Single left-to-right scan — no backtracking, linear.
+ */
+function scanToUnescaped(
+  line: string,
+  start: number,
+  delimiter: string
+): { end: number; closed: boolean } {
+  let scanIndex = start;
+  while (scanIndex < line.length) {
+    const char = line[scanIndex];
+    if (char === "\\") { scanIndex += 2; continue; }
+    if (char === delimiter) return { end: scanIndex, closed: true };
+    scanIndex++;
+  }
+  return { end: line.length, closed: false };
+}
+
+/**
  * Blank out string literals, line comments, and block comments so structural
  * counters (braces, commas, numbers) don't trip over their contents. Returns
  * one sanitized string per input line; line indices are preserved.
@@ -98,15 +119,8 @@ export function sanitize(lines: string[]): string[] {
         continue;
       }
       if (mode === "template") {
-        let scanIndex = cursor;
-        let closed = false;
-        while (scanIndex < lineLength) {
-          const char = rawLine[scanIndex];
-          if (char === "\\") { scanIndex += 2; continue; }
-          if (char === "`") { closed = true; break; }
-          scanIndex++;
-        }
-        if (closed) { cursor = scanIndex + 1; mode = "code"; } else { cursor = lineLength; }
+        const { end, closed } = scanToUnescaped(rawLine, cursor, "`");
+        if (closed) { cursor = end + 1; mode = "code"; } else { cursor = lineLength; }
         continue;
       }
 
@@ -129,29 +143,14 @@ export function sanitize(lines: string[]): string[] {
       }
 
       if (char === '"' || char === "'") {
-        const quote = char;
-        let scanIndex = cursor + 1;
-        let closed = false;
-        while (scanIndex < lineLength) {
-          const stringChar = rawLine[scanIndex];
-          if (stringChar === "\\") { scanIndex += 2; continue; }
-          if (stringChar === quote) { closed = true; break; }
-          scanIndex++;
-        }
-        cursor = closed ? scanIndex + 1 : lineLength; // drop the string content
+        const { end, closed } = scanToUnescaped(rawLine, cursor + 1, char);
+        cursor = closed ? end + 1 : lineLength; // drop the string content
         continue;
       }
 
       if (char === "`") {
-        let scanIndex = cursor + 1;
-        let closed = false;
-        while (scanIndex < lineLength) {
-          const stringChar = rawLine[scanIndex];
-          if (stringChar === "\\") { scanIndex += 2; continue; }
-          if (stringChar === "`") { closed = true; break; }
-          scanIndex++;
-        }
-        if (closed) { cursor = scanIndex + 1; } else { mode = "template"; cursor = lineLength; }
+        const { end, closed } = scanToUnescaped(rawLine, cursor + 1, "`");
+        if (closed) { cursor = end + 1; } else { mode = "template"; cursor = lineLength; }
         continue;
       }
 
