@@ -1,0 +1,49 @@
+{
+  "name": "mcp-software-design",
+  "version": "0.1.0",
+  "description": "MCP server that teaches and applies software-design guidance: SOLID/OOP/DRY principles, the 23 GoF design patterns, pattern scaffolding, and heuristic code-smell detection.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Muzaffar Qosimov <qwertymuzaffar@gmail.com>",
+  "mcpName": "io.github.qwertymuzaffar/software-design",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qwertymuzaffar/mcp-software-design.git"
+  },
+  "keywords": [
+    "mcp",
+    "modelcontextprotocol",
+    "design-patterns",
+    "solid",
+    "oop",
+    "gof",
+    "refactoring",
+    "claude"
+  ],
+  "bin": {
+    "mcp-software-design": "./build/index.js"
+  },
+  "files": [
+    "build",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "rm -rf build && tsc && chmod 755 build/index.js",
+    "start": "node build/index.js",
+    "pretest": "npm run build",
+    "test": "node --test test/*.test.mjs",
+    "prepublishOnly": "npm test",
+    "test:client": "node test-client.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.2"
+  }
+}
