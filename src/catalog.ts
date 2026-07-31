@@ -222,6 +222,30 @@ export const PRINCIPLES: Concept[] = [
     related: ["kiss", "open-closed"],
   },
   {
+    slug: "meaningful-names",
+    name: "Meaningful Names",
+    category: "principle",
+    aka: ["intention-revealing-names", "naming", "self-documenting-code"],
+    summary: "Names should reveal intent — reach for a word before a comment.",
+    intent:
+      "A name is the first documentation a reader meets. Prefer intention-" +
+      "revealing names that state what a value is or what a function does, so " +
+      "the code explains itself without a comment. Single-letter names are fine " +
+      "in tiny scopes — loop counters, short lambda parameters, coordinates/math " +
+      "— but hide meaning the moment a value outlives a line or two.",
+    whenToUse: [
+      "A variable needs a comment to explain what it holds.",
+      "You reach for `data`, `tmp`, `mgr`, or `x2` because the real name is hard.",
+      "A single-letter name is used far from where it was declared.",
+    ],
+    tradeoffs: [
+      "Over-long names (userAccountRepositoryFactoryInstance) hurt readability as much as cryptic ones.",
+      "Conventional short names beat forced verbosity — `i` in a for-loop, `e` for an event.",
+      "Renaming for clarity is cheap; keep established public/API names stable to avoid churn.",
+    ],
+    related: ["kiss", "single-responsibility", "separation-of-concerns"],
+  },
+  {
     slug: "composition-over-inheritance",
     name: "Composition Over Inheritance",
     category: "principle",

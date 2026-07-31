@@ -49,6 +49,14 @@ test("principleGroup partitions SOLID and the OOP pillars", () => {
   );
 });
 
+test("meaningful-names is a general-group principle, resolvable by alias", () => {
+  const concept = findConcept("meaningful-names");
+  assert.ok(concept, "meaningful-names concept exists");
+  assert.equal(concept.category, "principle");
+  assert.equal(principleGroup(concept), "general");
+  assert.equal(findConcept("intention-revealing-names")?.slug, "meaningful-names");
+});
+
 test("every concept slug is unique", () => {
   const slugs = ALL.map((c) => c.slug);
   assert.equal(new Set(slugs).size, slugs.length);
