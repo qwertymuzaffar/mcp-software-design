@@ -1,14 +1,39 @@
 # mcp-software-design
 
+[![npm version](https://img.shields.io/npm/v/mcp-software-design)](https://www.npmjs.com/package/mcp-software-design)
+[![npm downloads](https://img.shields.io/npm/dm/mcp-software-design)](https://www.npmjs.com/package/mcp-software-design)
+[![License: MIT](https://img.shields.io/npm/l/mcp-software-design)](./LICENSE)
+[![MCP](https://img.shields.io/badge/MCP-server-blue)](https://modelcontextprotocol.io)
+
 An [MCP](https://modelcontextprotocol.io) server that teaches and helps apply
 **software-design guidance** — the SOLID principles, the OOP pillars, DRY /
 KISS / YAGNI / meaningful naming, and the 23 Gang-of-Four design patterns —
-plus pattern
-scaffolding and heuristic code-smell detection.
+plus pattern scaffolding and heuristic code-smell detection.
 
 It's the companion to
 [`mcp-udacity-commit`](../mcp-udacity-commit): same stack (TypeScript, the MCP
 SDK, stdio transport), same shape (pure logic modules + thin server wiring).
+
+## Install
+
+Register it with Claude Code — one line, nothing to clone:
+
+```bash
+claude mcp add software-design -- npx -y mcp-software-design
+```
+
+Or in an MCP client config:
+
+```json
+{
+  "mcpServers": {
+    "software-design": {
+      "command": "npx",
+      "args": ["-y", "mcp-software-design"]
+    }
+  }
+}
+```
 
 ## Why this exists — and its one honest caveat
 
@@ -63,7 +88,10 @@ pretending to understand your snippet.
 - **`apply_pattern`** `{ pattern, code }` — refactor a snippet to apply a named
   pattern (and first judge whether it even fits).
 
-## Install & run
+## Build from source
+
+For local development, or to run a local checkout instead of the published
+package:
 
 ```bash
 npm install
@@ -73,7 +101,7 @@ npm test           # builds, then runs the unit tests
 npm run test:client  # end-to-end check against the built server
 ```
 
-### Register with Claude Code
+Then register the local build with Claude Code:
 
 ```bash
 claude mcp add software-design -- node /absolute/path/to/mcp-software-design/build/index.js
