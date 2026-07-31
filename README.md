@@ -11,7 +11,7 @@ KISS / YAGNI / meaningful naming, and the 23 Gang-of-Four design patterns —
 plus pattern scaffolding and heuristic code-smell detection.
 
 It's the companion to
-[`mcp-udacity-commit`](../mcp-udacity-commit): same stack (TypeScript, the MCP
+[`mcp-udacity-commit`](https://github.com/qwertymuzaffar/mcp-udacity-commit): same stack (TypeScript, the MCP
 SDK, stdio transport), same shape (pure logic modules + thin server wiring).
 
 ## Install
@@ -101,23 +101,12 @@ npm test           # builds, then runs the unit tests
 npm run test:client  # end-to-end check against the built server
 ```
 
-Then register the local build with Claude Code:
+Then register it the same way as [Install](#install) above — both the
+`claude mcp add` command and the MCP-client-config form work — but point at
+your local build instead of `npx`:
 
 ```bash
 claude mcp add software-design -- node /absolute/path/to/mcp-software-design/build/index.js
-```
-
-Or in an MCP client config:
-
-```json
-{
-  "mcpServers": {
-    "software-design": {
-      "command": "node",
-      "args": ["/absolute/path/to/mcp-software-design/build/index.js"]
-    }
-  }
-}
 ```
 
 ## Layout
