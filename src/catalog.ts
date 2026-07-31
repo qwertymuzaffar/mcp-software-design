@@ -246,6 +246,30 @@ export const PRINCIPLES: Concept[] = [
     related: ["kiss", "single-responsibility", "separation-of-concerns"],
   },
   {
+    slug: "clean-code",
+    name: "Clean Code",
+    category: "principle",
+    aka: ["readability", "craftsmanship"],
+    summary: "Code is read far more than it's written — optimize for the reader.",
+    intent:
+      "Clean Code is an umbrella habit, not a single rule: write code a later " +
+      "reader (usually you) can understand quickly and change safely. It's the " +
+      "sum of the concrete principles here — intention-revealing names, small " +
+      "single-purpose units, no duplication, and the simplest thing that works — " +
+      "rather than a separate technique of its own.",
+    whenToUse: [
+      "You hesitate to touch a file because you don't understand it.",
+      "Reviewers keep asking 'what does this do?' about the same code.",
+      "Reading the change takes longer than making it.",
+    ],
+    tradeoffs: [
+      "'Clean' is contextual — a throwaway script and a core library deserve different bars.",
+      "Endless renaming/extracting has diminishing returns; stop once it reads clearly.",
+      "Cleanliness is not correctness — clean code can still be wrong; tests decide behavior.",
+    ],
+    related: ["meaningful-names", "single-responsibility", "dry", "kiss"],
+  },
+  {
     slug: "composition-over-inheritance",
     name: "Composition Over Inheritance",
     category: "principle",

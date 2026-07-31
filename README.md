@@ -7,7 +7,8 @@
 
 An [MCP](https://modelcontextprotocol.io) server that teaches and helps apply
 **software-design guidance** — the SOLID principles, the OOP pillars, DRY /
-KISS / YAGNI / meaningful naming, and the 23 Gang-of-Four design patterns —
+KISS / YAGNI / meaningful naming / clean code, and the 23 Gang-of-Four design
+patterns —
 plus pattern scaffolding and heuristic code-smell detection.
 
 It's the companion to
