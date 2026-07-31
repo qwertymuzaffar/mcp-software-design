@@ -63,11 +63,21 @@ test("clean-code is a general-group umbrella principle, resolvable by alias", ()
   assert.equal(concept.category, "principle");
   assert.equal(principleGroup(concept), "general");
   assert.equal(findConcept("readability")?.slug, "clean-code");
+  assert.equal(findConcept("craftsmanship")?.slug, "clean-code");
 });
 
 test("every concept slug is unique", () => {
   const slugs = ALL.map((c) => c.slug);
   assert.equal(new Set(slugs).size, slugs.length);
+});
+
+test("every related slug resolves to a real concept", () => {
+  const slugs = new Set(ALL.map((c) => c.slug));
+  for (const concept of ALL) {
+    for (const rel of concept.related ?? []) {
+      assert.ok(slugs.has(rel), `${concept.slug} → related "${rel}" is not a known slug`);
+    }
+  }
 });
 
 test("every pattern has participants so it is scaffoldable", () => {
