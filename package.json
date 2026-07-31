@@ -12,13 +12,21 @@
   },
   "keywords": [
     "mcp",
+    "mcp-server",
     "modelcontextprotocol",
+    "model-context-protocol",
+    "claude",
+    "developer-tools",
+    "software-design",
     "design-patterns",
+    "design-principles",
     "solid",
     "oop",
     "gof",
+    "gang-of-four",
     "refactoring",
-    "claude"
+    "clean-code",
+    "code-smells"
   ],
   "bin": {
     "mcp-software-design": "build/index.js"
