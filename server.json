@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.qwertymuzaffar/software-design",
-  "description": "Teach & apply software-design guidance: SOLID/OOP/DRY principles, the 23 GoF patterns, pattern scaffolding, and heuristic code-smell detection.",
+  "description": "SOLID/OOP/DRY, the 23 GoF patterns, pattern scaffolding, and heuristic code-smell detection.",
   "repository": {
     "url": "https://github.com/qwertymuzaffar/mcp-software-design",
     "source": "github"
