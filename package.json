@@ -21,7 +21,7 @@
     "claude"
   ],
   "bin": {
-    "mcp-software-design": "./build/index.js"
+    "mcp-software-design": "build/index.js"
   },
   "files": [
     "build",
