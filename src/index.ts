@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { readFileSync } from "node:fs";
+
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
@@ -16,7 +18,17 @@ import {
 import { detectSmells, DEFAULTS, type Smell } from "./smells.js";
 import { scaffoldPattern } from "./scaffold.js";
 
-const VERSION = "0.1.0";
+/**
+ * Single source of truth: read the version from package.json at startup so it
+ * can never drift from the published package. Resolved relative to this module,
+ * so it works both from `build/` in the repo and from the installed package
+ * (npm ships package.json alongside build/).
+ */
+const VERSION = (
+  JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as {
+    version: string;
+  }
+).version;
 
 /** Human-readable summary of what the smell checker looks for. */
 const SMELLS_GUIDE = `# Code-smell heuristics (design://smells)
