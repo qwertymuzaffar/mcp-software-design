@@ -6,12 +6,12 @@
     "url": "https://github.com/qwertymuzaffar/mcp-software-design",
     "source": "github"
   },
-  "version": "0.1.1",
+  "version": "0.1.2",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "mcp-software-design",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "transport": {
         "type": "stdio"
       }

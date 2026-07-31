@@ -1,6 +1,6 @@
 {
   "name": "mcp-software-design",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "MCP server that teaches and applies software-design guidance: SOLID/OOP/DRY principles, the 23 GoF design patterns, pattern scaffolding, and heuristic code-smell detection.",
   "type": "module",
   "license": "MIT",
