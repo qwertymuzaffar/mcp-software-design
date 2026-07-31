@@ -57,6 +57,14 @@ test("meaningful-names is a general-group principle, resolvable by alias", () =>
   assert.equal(findConcept("intention-revealing-names")?.slug, "meaningful-names");
 });
 
+test("clean-code is a general-group umbrella principle, resolvable by alias", () => {
+  const concept = findConcept("clean-code");
+  assert.ok(concept, "clean-code concept exists");
+  assert.equal(concept.category, "principle");
+  assert.equal(principleGroup(concept), "general");
+  assert.equal(findConcept("readability")?.slug, "clean-code");
+});
+
 test("every concept slug is unique", () => {
   const slugs = ALL.map((c) => c.slug);
   assert.equal(new Set(slugs).size, slugs.length);
