@@ -101,8 +101,9 @@ npm test           # builds, then runs the unit tests
 npm run test:client  # end-to-end check against the built server
 ```
 
-Then register it the same way as [Install](#install) above, but point the
-command at your local build instead of `npx`:
+Then register it the same way as [Install](#install) above — both the
+`claude mcp add` command and the MCP-client-config form work — but point at
+your local build instead of `npx`:
 
 ```bash
 claude mcp add software-design -- node /absolute/path/to/mcp-software-design/build/index.js
