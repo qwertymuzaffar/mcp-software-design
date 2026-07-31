@@ -11,7 +11,7 @@ KISS / YAGNI / meaningful naming, and the 23 Gang-of-Four design patterns —
 plus pattern scaffolding and heuristic code-smell detection.
 
 It's the companion to
-[`mcp-udacity-commit`](../mcp-udacity-commit): same stack (TypeScript, the MCP
+[`mcp-udacity-commit`](https://github.com/qwertymuzaffar/mcp-udacity-commit): same stack (TypeScript, the MCP
 SDK, stdio transport), same shape (pure logic modules + thin server wiring).
 
 ## Install
