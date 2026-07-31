@@ -9,6 +9,7 @@ import {
   conceptLine,
   conceptToMarkdown,
   findConcept,
+  principleGroup,
   principlesMarkdown,
   patternsMarkdown,
   type Category,
@@ -105,9 +106,13 @@ export function createServer(): McpServer {
         "kind. Returns each concept's slug, name, category, and one-line summary.",
       inputSchema: {
         kind: z
-          .enum(["all", "principle", "pattern", "creational", "structural", "behavioral"])
+          .enum(["all", "principle", "solid", "oop", "pattern", "creational", "structural", "behavioral"])
           .optional()
-          .describe('Filter by kind. "pattern" = all GoF patterns. Default "all".'),
+          .describe(
+            'Filter by kind. "principle" = all principles; "solid"/"oop" narrow ' +
+              'to the SOLID five / the four OOP pillars; "pattern" = all GoF ' +
+              'patterns. Default "all".'
+          ),
       },
       outputSchema: {
         count: z.number(),
@@ -126,6 +131,8 @@ export function createServer(): McpServer {
       const matchesKind = (concept: (typeof ALL)[number]): boolean => {
         if (selectedKind === "all") return true;
         if (selectedKind === "principle") return concept.category === "principle";
+        if (selectedKind === "solid") return principleGroup(concept) === "solid";
+        if (selectedKind === "oop") return principleGroup(concept) === "oop";
         if (selectedKind === "pattern") return concept.category !== "principle";
         return concept.category === (selectedKind as Category);
       };
