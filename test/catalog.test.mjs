@@ -9,6 +9,7 @@ import {
   PATTERNS,
   findConcept,
   conceptToMarkdown,
+  principleGroup,
 } from "../build/catalog.js";
 import { scaffoldPattern } from "../build/scaffold.js";
 
@@ -26,6 +27,26 @@ test("catalog has the SOLID five plus the 23 GoF patterns", () => {
   ]) {
     assert.ok(PRINCIPLES.some((p) => p.slug === slug), `missing principle ${slug}`);
   }
+});
+
+test("principleGroup partitions SOLID and the OOP pillars", () => {
+  const bySlug = (concepts) => concepts.map((c) => c.slug).sort();
+  const solid = PRINCIPLES.filter((p) => principleGroup(p) === "solid");
+  const oop = PRINCIPLES.filter((p) => principleGroup(p) === "oop");
+
+  assert.deepEqual(bySlug(solid), [
+    "dependency-inversion", "interface-segregation", "liskov-substitution",
+    "open-closed", "single-responsibility",
+  ]);
+  assert.deepEqual(bySlug(oop), [
+    "abstraction", "encapsulation", "inheritance", "polymorphism",
+  ]);
+  // Patterns are never solid/oop; the rest of the principles are "general".
+  assert.ok(PATTERNS.every((p) => principleGroup(p) === "general"));
+  assert.equal(
+    PRINCIPLES.filter((p) => principleGroup(p) === "general").length,
+    PRINCIPLES.length - solid.length - oop.length
+  );
 });
 
 test("every concept slug is unique", () => {

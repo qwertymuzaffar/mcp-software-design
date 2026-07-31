@@ -14,6 +14,13 @@
 
 export type Category = "principle" | "creational" | "structural" | "behavioral";
 
+/**
+ * Sub-group within the principles, so callers can focus on just the SOLID five
+ * or the four OOP pillars instead of the whole principle bucket. Everything
+ * else — patterns, plus DRY/KISS/YAGNI and the other guidelines — is "general".
+ */
+export type PrincipleGroup = "solid" | "oop" | "general";
+
 /** One role in a pattern's structure (used by the scaffolder). */
 export interface Participant {
   /** Role name, e.g. "Product", "Creator". */
@@ -941,6 +948,35 @@ export const PATTERNS: Concept[] = [
  * ------------------------------------------------------------------ */
 
 export const ALL: Concept[] = [...PRINCIPLES, ...PATTERNS];
+
+/** The five SOLID principles, by slug. */
+const SOLID_SLUGS = new Set<string>([
+  "single-responsibility",
+  "open-closed",
+  "liskov-substitution",
+  "interface-segregation",
+  "dependency-inversion",
+]);
+
+/** The four classic OOP pillars, by slug. */
+const OOP_SLUGS = new Set<string>([
+  "encapsulation",
+  "abstraction",
+  "inheritance",
+  "polymorphism",
+]);
+
+/**
+ * Which sub-group a concept belongs to. Patterns and the remaining principles
+ * (DRY, KISS, YAGNI, composition-over-inheritance, law-of-demeter,
+ * separation-of-concerns) are "general". Drives the "solid"/"oop" filters on
+ * the list_catalog tool.
+ */
+export function principleGroup(concept: Concept): PrincipleGroup {
+  if (SOLID_SLUGS.has(concept.slug)) return "solid";
+  if (OOP_SLUGS.has(concept.slug)) return "oop";
+  return "general";
+}
 
 /** Normalize a query for fuzzy matching: lowercase, strip non-alphanumerics. */
 function normalize(text: string): string {
