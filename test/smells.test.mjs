@@ -85,6 +85,28 @@ test("duplicated lines inside string literals are ignored", () => {
   assert.equal(has(detectSmells(code), "duplication"), false);
 });
 
+test("a closing brace before a control keyword is not a method header (review: else-if)", () => {
+  // Each control line below is followed by a long tail; a header mistaken here
+  // would report a long method starting at that line.
+  const tail = Array.from({ length: 45 }, (_, index) => `    value = step${index}(value);`).join("\n");
+  for (const control of ['} else if (kind === "a" || kind === "b") {', "} catch (error) {", "} else {", "} finally {"]) {
+    const code = `function f(kind) {\n  let value = 0;\n  if (kind) {\n    value = 1;\n  ${control}\n${tail}\n  }\n  return value;\n}`;
+    const longMethods = detectSmells(code, { longMethod: 40 }).filter((s) => s.id === "long-method");
+    assert.equal(longMethods.length, 1, control);
+    assert.equal(longMethods[0].line, 1, control);
+  }
+  const catchParams = "function g() {\n  try {\n    run();\n  } catch (first, second, third, fourth, fifth) {\n    fail();\n  }\n}";
+  assert.equal(has(detectSmells(catchParams), "too-many-params"), false);
+});
+
+test("a genuine method after a closing brace on its own line is still detected", () => {
+  const body = Array.from({ length: 45 }, (_, index) => `    this.value = step${index}(this.value);`).join("\n");
+  const code = `class A {\n  small() {\n    return 1;\n  }\n  big(input) {\n${body}\n  }\n}`;
+  const longMethod = detectSmells(code).find((s) => s.id === "long-method");
+  assert.ok(longMethod);
+  assert.equal(longMethod.line, 5);
+});
+
 test("rows of a multi-line object table are not duplicated logic", () => {
   const row = "  alpha: { input: 5, output: 25, cached: 1 },";
   const code = `export const PRICES = {\n${row}\n${row}\n${row}\n${row}\n};`;

@@ -190,9 +190,14 @@ function leadingIdentifier(trimmedLine: string): string {
   return match ? match[1] : "";
 }
 
-/** True if the (possibly multi-line-joined) text is a function/method header opening a `{`. */
+/**
+ * True if the (possibly multi-line-joined) text is a function/method header
+ * opening a `{`. A closing brace that starts the line (`} else if (x) {`,
+ * `} catch (error) {`) is dropped first so the control keyword behind it is
+ * seen; otherwise such a line has no leading identifier and reads as a header.
+ */
 function isBraceMethodHeader(headerText: string): boolean {
-  const trimmed = headerText.trim();
+  const trimmed = headerText.trim().replace(/^\}\s*/, "");
   if (!trimmed.endsWith("{")) return false;
   if (!trimmed.includes("(")) return false;
   const leadingWord = leadingIdentifier(trimmed);
