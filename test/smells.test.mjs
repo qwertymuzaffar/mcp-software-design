@@ -85,6 +85,76 @@ test("duplicated lines inside string literals are ignored", () => {
   assert.equal(has(detectSmells(code), "duplication"), false);
 });
 
+test("a closing brace before a control keyword is not a method header (review: else-if)", () => {
+  // Each control line below is followed by a long tail; a header mistaken here
+  // would report a long method starting at that line.
+  const tail = Array.from({ length: 45 }, (_, index) => `    value = step${index}(value);`).join("\n");
+  for (const control of ['} else if (kind === "a" || kind === "b") {', "} catch (error) {", "} else {", "} finally {"]) {
+    const code = `function f(kind) {\n  let value = 0;\n  if (kind) {\n    value = 1;\n  ${control}\n${tail}\n  }\n  return value;\n}`;
+    const longMethods = detectSmells(code, { longMethod: 40 }).filter((s) => s.id === "long-method");
+    assert.equal(longMethods.length, 1, control);
+    assert.equal(longMethods[0].line, 1, control);
+  }
+  const catchParams = "function g() {\n  try {\n    run();\n  } catch (first, second, third, fourth, fifth) {\n    fail();\n  }\n}";
+  assert.equal(has(detectSmells(catchParams), "too-many-params"), false);
+});
+
+test("a genuine method after a closing brace on its own line is still detected", () => {
+  const body = Array.from({ length: 45 }, (_, index) => `    this.value = step${index}(this.value);`).join("\n");
+  const code = `class A {\n  small() {\n    return 1;\n  }\n  big(input) {\n${body}\n  }\n}`;
+  const longMethod = detectSmells(code).find((s) => s.id === "long-method");
+  assert.ok(longMethod);
+  assert.equal(longMethod.line, 5);
+});
+
+test("rows of a multi-line object table are not duplicated logic", () => {
+  const row = "  alpha: { input: 5, output: 25, cached: 1 },";
+  const code = `export const PRICES = {\n${row}\n${row}\n${row}\n${row}\n};`;
+  assert.equal(has(detectSmells(code), "duplication"), false);
+});
+
+test("entries of a multi-line array of tuples are not duplicated logic", () => {
+  const row = "  { name: 'x', words: 'Subjective|Chief', short: 'S' },";
+  const code = `const HEADERS = [\n${row}\n${row}\n${row}\n${row}\n];\nfunction f() {\n  return HEADERS;\n}`;
+  assert.equal(has(detectSmells(code), "duplication"), false);
+});
+
+test("consecutive push calls with string arguments are not duplicated logic", () => {
+  const line = "  lines.push('| --- | --- |', '');";
+  const code = `function render(lines) {\n${line}\n${line}\n${line}\n  return lines;\n}`;
+  assert.equal(has(detectSmells(code), "duplication"), false);
+});
+
+test("a repeated throw guard with a message is not duplicated logic", () => {
+  const guard = "  throw new RangeError('dimension must be positive');";
+  const code = `function check(bad) {\n${guard}\n${guard}\n${guard}\n}`;
+  assert.equal(has(detectSmells(code), "duplication"), false);
+});
+
+test("a genuinely repeated statement is still flagged", () => {
+  const line = "  const state = await load(this.core, this.id);";
+  const code = `async function f() {\n${line}\n${line}\n${line}\n${line}\n${line}\n}`;
+  const dup = detectSmells(code).find((s) => s.id === "duplication");
+  assert.ok(dup);
+  assert.equal(dup.line, 2);
+});
+
+test("a method header with a return type opens a block, not a literal", () => {
+  const line = "    const state = await load(this.core, this.id);";
+  const code = `class Session {\n  add(input: Message): Promise<AddResult> {\n${line}\n${line}\n${line}\n  }\n}`;
+  assert.equal(has(detectSmells(code), "duplication"), true);
+  const union = `function toKey(value: unknown): string | null {\n${line}\n${line}\n${line}\n}`;
+  assert.equal(has(detectSmells(union), "duplication"), true);
+  const ternary = `const shape = ready ? build(a) : {\n  alpha: { input: 5, output: 25, cached: 1 },\n  alpha: { input: 5, output: 25, cached: 1 },\n  alpha: { input: 5, output: 25, cached: 1 },\n};`;
+  assert.equal(has(detectSmells(ternary), "duplication"), false);
+});
+
+test("statements inside a callback that lives in an object literal are still counted", () => {
+  const line = "      total = total + computeTax(order);";
+  const code = `const handlers = {\n  onOrder: (order) => {\n${line}\n${line}\n${line}\n  },\n};`;
+  assert.equal(has(detectSmells(code), "duplication"), true);
+});
+
 test("braces inside strings/comments don't break method-length counting", () => {
   const code = `function f() {\n  const s = "}{}{";\n  // stray } { braces\n  return s;\n}\nfunction g(a, b, c, d, e) {\n  return a;\n}`;
   const smells = detectSmells(code);
