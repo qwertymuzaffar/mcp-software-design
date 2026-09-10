@@ -139,6 +139,72 @@ test("a genuinely repeated statement is still flagged", () => {
   assert.equal(dup.line, 2);
 });
 
+test("members of interface, type and enum bodies are not duplicated logic", () => {
+  const code = [
+    "interface A { depthTest?: boolean; altitudeMode?: string; [key: string]: any; }",
+    "export interface B {",
+    "  depthTest?: boolean;",
+    "  altitudeMode?: string;",
+    "  [key: string]: any;",
+    "}",
+    "type C = {",
+    "  depthTest?: boolean;",
+    "  altitudeMode?: string;",
+    "  [key: string]: any;",
+    "};",
+    "enum Mode { Point, Line, Polygon }",
+  ].join("\n");
+  assert.equal(has(detectSmells(code), "duplication"), false);
+});
+
+test("class fields and typed parameters are not duplicated logic", () => {
+  const code = [
+    "class P { enabled = true; highlighted = false; readonly mode = input<Mode | undefined>(undefined); }",
+    "class Q {",
+    "  enabled = true;",
+    "  highlighted = false;",
+    "  readonly mode = input<Mode | undefined>(undefined);",
+    "  private label = 'x';",
+    "}",
+    "class R {",
+    "  enabled = true;",
+    "  highlighted = false;",
+    "  readonly mode = input<Mode | undefined>(undefined);",
+    "  private label = 'y';",
+    "}",
+    "function createPath(",
+    "  worldWind: WorldWindStatic,",
+    "  options: PathOptions,",
+    ") { return 1; }",
+    "function createPolygon(",
+    "  worldWind: WorldWindStatic,",
+    "  options: PolygonOptions,",
+    ") { return 2; }",
+    "function createCircle(",
+    "  worldWind: WorldWindStatic,",
+    "  onDone: (shape: Shape) => void,",
+    ") { return 3; }",
+  ].join("\n");
+  assert.equal(has(detectSmells(code), "duplication"), false);
+});
+
+test("callback openers are not duplicated logic but the statements inside still are", () => {
+  const opener = ["useEffect(() => {", "  const globe = useGlobe();", "  globe.redraw(frame, options);", "});"];
+  const code = [...opener, ...opener, ...opener, "effect((onCleanup) => {", "  onCleanup(() => {", "  });", "});"].join("\n");
+  const findings = detectSmells(code).filter((s) => s.id === "duplication");
+  assert.equal(findings.some((s) => s.detail.includes("useEffect(() => {")), false);
+  assert.equal(findings.some((s) => s.detail.includes("effect((onCleanup) => {")), false);
+  assert.equal(findings.some((s) => s.detail.includes("globe.redraw(frame, options);")), true);
+});
+
+test("a repeated statement, and a callback call with other arguments, are still flagged", () => {
+  const body = ["  const state = await load(this.core, this.id);", "  return this.core.run(this.id, async () => {", "  });"];
+  const code = ["class S {", ...["a", "b", "c", "d", "e"].flatMap((name) => [`  async ${name}() {`, ...body, "  }"]), "}"].join("\n");
+  const findings = detectSmells(code).filter((s) => s.id === "duplication");
+  assert.equal(findings.some((s) => s.detail.includes("const state = await load(this.core, this.id);")), true);
+  assert.equal(findings.some((s) => s.detail.includes("return this.core.run(this.id, async () => {")), true);
+});
+
 test("a method header with a return type opens a block, not a literal", () => {
   const line = "    const state = await load(this.core, this.id);";
   const code = `class Session {\n  add(input: Message): Promise<AddResult> {\n${line}\n${line}\n${line}\n  }\n}`;

@@ -504,27 +504,72 @@ function opensBlock(prefix: string): boolean {
  */
 const TRIVIAL_CALL = /^(?:return\s+|await\s+|throw\s+new\s+)?[\w$.]+\s*\(\s*[,\s]*\)\s*;?$/;
 
+type BraceKind = "block" | "literal" | "declaration";
+
+/**
+ * What a `{` opens: a `type` / `interface` / `enum` body (members are
+ * declarations, never duplicated logic), an object literal, or a block.
+ */
+function braceKind(prefix: string): BraceKind {
+  if (/^(?:export\s+)?(?:declare\s+)?(?:interface|enum|type)\b/.test(prefix.trim())) return "declaration";
+  return opensBlock(prefix) ? "block" : "literal";
+}
+
+const MEMBER_MODIFIERS = "(?:(?:readonly|private|protected|public|override|static|declare|abstract)\\s+)";
+
+/**
+ * A member or parameter declaration: `depthTest?: boolean;`, `worldWind: T,`,
+ * `[key: string]: any;`. The type part may be a function type but never a
+ * block, so a labelled statement or a `default: return x;` is left alone.
+ */
+const TYPED_DECLARATION = new RegExp(
+  `^${MEMBER_MODIFIERS}*(?:\\[[\\w$]+\\s*:\\s*[^\\]]+\\]|[\\w$#]+)\\??\\s*:\\s*([^={}]+?)\\s*[;,]?$`
+);
+
+/** A field with an initializer: `enabled = true;`, `readonly name = input<T>(undefined);`. */
+const INITIALIZED_MEMBER = new RegExp(
+  `^${MEMBER_MODIFIERS}+[\\w$#]+\\??\\s*(?::\\s*[^=]+?)?\\s*=\\s*[^;]*;?$`
+);
+
+/** A bare field whose initializer is a literal (strings are already blanked): `highlighted = false;`, `label = ;`. */
+const LITERAL_ASSIGNMENT = /^[\w$#]+\s*(?::\s*[^=]+?)?\s*=\s*(?:true|false|null|undefined|-?\d[\d._]*|\[\s*\]|\{\s*\}|new\s+[\w$.]+\(\s*\)|)\s*;?$/;
+
+/**
+ * A callback opener whose only argument is the callback: `useEffect(() => {`,
+ * `effect((onCleanup) => {`, `.then(async (layer) => {`. The logic is on the
+ * lines that follow; a call with other arguments before the callback still counts.
+ */
+const CALLBACK_OPENER = /^(?:(?:return|await)\s+|(?:const|let|var)\s+[\w$]+\s*=\s*)?[\w$.]+\s*\(\s*(?:async\s+)?(?:\(\s*[\w$,\s]*\)|[\w$]+)\s*=>\s*\{\s*$/;
+
+/** True for lines that declare rather than do: members, parameters, literal-initialized fields, callback openers. */
+function isDeclarationLine(trimmed: string): boolean {
+  if (/^(?:case|default)\b/.test(trimmed)) return false;
+  const typed = trimmed.match(TYPED_DECLARATION);
+  if (typed && (!typed[1].includes("(") || typed[1].includes("=>"))) return true;
+  return INITIALIZED_MEMBER.test(trimmed) || LITERAL_ASSIGNMENT.test(trimmed) || CALLBACK_OPENER.test(trimmed);
+}
+
 /** Detect duplicated non-trivial lines (a DRY proxy). */
 function detectDuplication(sanitized: string[], options: SmellOptions): Smell[] {
   const lineCounts = new Map<string, { count: number; firstLine: number }>();
-  // Innermost open `{`/`[` per line, true when it opened an object/array
-  // literal: rows of a lookup table are data, not duplicated logic.
-  const bracketStack: boolean[] = [];
+  // Innermost open `{`/`[` per line: rows of a lookup table and members of
+  // a type declaration are data and shape, not duplicated logic.
+  const bracketStack: BraceKind[] = [];
   for (let lineIndex = 0; lineIndex < sanitized.length; lineIndex++) {
     const line = sanitized[lineIndex];
-    const insideLiteral = bracketStack.length > 0 && bracketStack[bracketStack.length - 1];
+    const enclosing = bracketStack[bracketStack.length - 1] ?? "block";
     for (let charIndex = 0; charIndex < line.length; charIndex++) {
       const char = line[charIndex];
-      if (char === "{") bracketStack.push(!opensBlock(line.slice(0, charIndex)));
-      else if (char === "[") bracketStack.push(true);
+      if (char === "{") bracketStack.push(braceKind(line.slice(0, charIndex)));
+      else if (char === "[") bracketStack.push("literal");
       else if (char === "}" || char === "]") bracketStack.pop();
     }
-    if (insideLiteral) continue;
+    if (enclosing !== "block") continue;
     const trimmed = line.trim();
     if (trimmed.length < 15) continue; // too short to be meaningful
     if (/^[{}()\[\];,]+$/.test(trimmed)) continue; // pure punctuation
     if (/^(import|from|export|package|using|#include|@)/.test(trimmed)) continue;
-    if (TRIVIAL_CALL.test(trimmed)) continue;
+    if (TRIVIAL_CALL.test(trimmed) || isDeclarationLine(trimmed)) continue;
     const record = lineCounts.get(trimmed) ?? { count: 0, firstLine: lineIndex + 1 };
     record.count++;
     lineCounts.set(trimmed, record);

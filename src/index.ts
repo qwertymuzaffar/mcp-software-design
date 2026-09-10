@@ -53,7 +53,11 @@ All thresholds are overridable per call on the \`check_smells\` tool.
 Duplication skips members of multi-line object and array literals (rows of a
 lookup table are data) and calls or throws whose arguments were all string
 literals (\`lines.push('...')\`, \`throw new Error('...')\`), so message and
-state-name lines do not register.
+state-name lines do not register. It also skips declarations rather than
+logic: members of \`interface\` / \`type\` / \`enum\` bodies, typed member and
+parameter lines (\`depthTest?: boolean;\`), fields initialized with a literal or
+declared with a modifier (\`readonly name = input(undefined);\`), and callback
+openers whose only argument is the callback (\`useEffect(() => {\`).
 `;
 
 /** Render smells as a compact text report. */
