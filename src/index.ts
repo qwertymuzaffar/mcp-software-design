@@ -49,6 +49,11 @@ braces, parentheses, and indentation, not a real parser).
 | large-file | > ${DEFAULTS.maxFileLines} lines | separation-of-concerns |
 
 All thresholds are overridable per call on the \`check_smells\` tool.
+
+Duplication skips members of multi-line object and array literals (rows of a
+lookup table are data) and calls or throws whose arguments were all string
+literals (\`lines.push('...')\`, \`throw new Error('...')\`), so message and
+state-name lines do not register.
 `;
 
 /** Render smells as a compact text report. */

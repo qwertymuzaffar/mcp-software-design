@@ -463,14 +463,63 @@ function detectLargeClass(sanitized: string[], options: SmellOptions): Smell[] {
   return findings;
 }
 
+/**
+ * Whether a `{` opens a block (function or control body, type declaration)
+ * rather than an object literal, judged from the sanitized text before it on
+ * its line. A header ends in `)` (optionally followed by a return type) or
+ * `=>`, a bare `else`/`try`/`do`/`finally`, or names a type; anything after
+ * `=`, `(`, `,`, `:`, `return` and the like is a literal. An empty prefix (a
+ * `{` opening the line) counts as a block.
+ */
+function opensBlock(prefix: string): boolean {
+  const trimmed = prefix.trim();
+  if (trimmed === "") return true;
+  if (/(=>|\belse|\btry|\bdo|\bfinally)$/.test(trimmed)) return true;
+  // A header keeps its `(...)` and may add a return type after it
+  // (`foo(): Promise<T | null> {`, `fn f() -> T {`, `func f() error {`);
+  // a literal after a call sits behind `=`, `,`, `(`, `?`, `:` or `||`.
+  const lastParen = trimmed.lastIndexOf(")");
+  if (lastParen !== -1) {
+    const tail = trimmed.slice(lastParen + 1).trim();
+    if (tail === "") return true;
+    if (tail === ":") return false; // `ok ? f(a) : {`
+    if (/^(:|->)\s*\S/.test(tail)) return true; // typed return
+    return /^[\w$<>\[\]*. ]*$/.test(tail); // `throws X`, `error`, `*T`
+  }
+  if (/^(case|default)\b/.test(trimmed)) return true;
+  const leadingWord = leadingIdentifier(trimmed);
+  if (CONTROL_KEYWORDS.has(leadingWord) || TYPE_KEYWORDS.has(leadingWord)) return true;
+  return /\b(class|interface|enum|struct|trait|impl|namespace|module|match)\s+[\w$<>:, ]*$/.test(trimmed);
+}
+
+/**
+ * A call or throw whose arguments were all string literals (blanked by
+ * `sanitize`): `lines.push(, );`, `throw new RangeError();`, `this.status.set();`.
+ * Such lines are messages and state names, not repeated logic.
+ */
+const TRIVIAL_CALL = /^(?:return\s+|await\s+|throw\s+new\s+)?[\w$.]+\s*\(\s*[,\s]*\)\s*;?$/;
+
 /** Detect duplicated non-trivial lines (a DRY proxy). */
 function detectDuplication(sanitized: string[], options: SmellOptions): Smell[] {
   const lineCounts = new Map<string, { count: number; firstLine: number }>();
+  // Innermost open `{`/`[` per line, true when it opened an object/array
+  // literal: rows of a lookup table are data, not duplicated logic.
+  const bracketStack: boolean[] = [];
   for (let lineIndex = 0; lineIndex < sanitized.length; lineIndex++) {
-    const trimmed = sanitized[lineIndex].trim();
+    const line = sanitized[lineIndex];
+    const insideLiteral = bracketStack.length > 0 && bracketStack[bracketStack.length - 1];
+    for (let charIndex = 0; charIndex < line.length; charIndex++) {
+      const char = line[charIndex];
+      if (char === "{") bracketStack.push(!opensBlock(line.slice(0, charIndex)));
+      else if (char === "[") bracketStack.push(true);
+      else if (char === "}" || char === "]") bracketStack.pop();
+    }
+    if (insideLiteral) continue;
+    const trimmed = line.trim();
     if (trimmed.length < 15) continue; // too short to be meaningful
     if (/^[{}()\[\];,]+$/.test(trimmed)) continue; // pure punctuation
     if (/^(import|from|export|package|using|#include|@)/.test(trimmed)) continue;
+    if (TRIVIAL_CALL.test(trimmed)) continue;
     const record = lineCounts.get(trimmed) ?? { count: 0, firstLine: lineIndex + 1 };
     record.count++;
     lineCounts.set(trimmed, record);

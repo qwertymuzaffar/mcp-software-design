@@ -85,6 +85,54 @@ test("duplicated lines inside string literals are ignored", () => {
   assert.equal(has(detectSmells(code), "duplication"), false);
 });
 
+test("rows of a multi-line object table are not duplicated logic", () => {
+  const row = "  alpha: { input: 5, output: 25, cached: 1 },";
+  const code = `export const PRICES = {\n${row}\n${row}\n${row}\n${row}\n};`;
+  assert.equal(has(detectSmells(code), "duplication"), false);
+});
+
+test("entries of a multi-line array of tuples are not duplicated logic", () => {
+  const row = "  { name: 'x', words: 'Subjective|Chief', short: 'S' },";
+  const code = `const HEADERS = [\n${row}\n${row}\n${row}\n${row}\n];\nfunction f() {\n  return HEADERS;\n}`;
+  assert.equal(has(detectSmells(code), "duplication"), false);
+});
+
+test("consecutive push calls with string arguments are not duplicated logic", () => {
+  const line = "  lines.push('| --- | --- |', '');";
+  const code = `function render(lines) {\n${line}\n${line}\n${line}\n  return lines;\n}`;
+  assert.equal(has(detectSmells(code), "duplication"), false);
+});
+
+test("a repeated throw guard with a message is not duplicated logic", () => {
+  const guard = "  throw new RangeError('dimension must be positive');";
+  const code = `function check(bad) {\n${guard}\n${guard}\n${guard}\n}`;
+  assert.equal(has(detectSmells(code), "duplication"), false);
+});
+
+test("a genuinely repeated statement is still flagged", () => {
+  const line = "  const state = await load(this.core, this.id);";
+  const code = `async function f() {\n${line}\n${line}\n${line}\n${line}\n${line}\n}`;
+  const dup = detectSmells(code).find((s) => s.id === "duplication");
+  assert.ok(dup);
+  assert.equal(dup.line, 2);
+});
+
+test("a method header with a return type opens a block, not a literal", () => {
+  const line = "    const state = await load(this.core, this.id);";
+  const code = `class Session {\n  add(input: Message): Promise<AddResult> {\n${line}\n${line}\n${line}\n  }\n}`;
+  assert.equal(has(detectSmells(code), "duplication"), true);
+  const union = `function toKey(value: unknown): string | null {\n${line}\n${line}\n${line}\n}`;
+  assert.equal(has(detectSmells(union), "duplication"), true);
+  const ternary = `const shape = ready ? build(a) : {\n  alpha: { input: 5, output: 25, cached: 1 },\n  alpha: { input: 5, output: 25, cached: 1 },\n  alpha: { input: 5, output: 25, cached: 1 },\n};`;
+  assert.equal(has(detectSmells(ternary), "duplication"), false);
+});
+
+test("statements inside a callback that lives in an object literal are still counted", () => {
+  const line = "      total = total + computeTax(order);";
+  const code = `const handlers = {\n  onOrder: (order) => {\n${line}\n${line}\n${line}\n  },\n};`;
+  assert.equal(has(detectSmells(code), "duplication"), true);
+});
+
 test("braces inside strings/comments don't break method-length counting", () => {
   const code = `function f() {\n  const s = "}{}{";\n  // stray } { braces\n  return s;\n}\nfunction g(a, b, c, d, e) {\n  return a;\n}`;
   const smells = detectSmells(code);
